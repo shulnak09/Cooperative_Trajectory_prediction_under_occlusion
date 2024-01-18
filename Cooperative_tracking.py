@@ -1,3 +1,4 @@
+# Import Libraries:
 import pyzed.sl as sl
 import numpy as np
 import cv2
@@ -8,6 +9,7 @@ import time
 from Relative_pose import compute_pose, degeneracyCheckPass
 from matplotlib import pyplot as plt
 from scipy.interpolate import CubicSpline
+
 
 def interpolate_nan(initial_array):
     t = np.linspace(0.4, 8, 20) # Time steps for collecting 
@@ -21,8 +23,10 @@ def interpolate_nan(initial_array):
             cs = CubicSpline(t_interp, y_interp)
             initial_array[nan_indices, col] = cs(t[nan_indices])
 
+# open the two zed cameras:
 zed = [sl.Camera(), sl.Camera()]
 
+# Initialize parameters for the cameras
 init_params = sl.InitParameters()
 init_params.camera_resolution = sl.RESOLUTION.HD720 # Use HD1080 video mode
 init_params.camera_fps = 30 # Set fps at 30
@@ -30,23 +34,12 @@ init_params.sdk_verbose = True # Enable the verbose mode
 init_params.depth_mode = sl.DEPTH_MODE.ULTRA # Set the depth mode to performance (fastest)
 init_params.coordinate_units = sl.UNIT.METER  # Use milimeter units (for depth measurements)
 
+# Initialize the zed camera with two 
 zed[0].open(init_params)
 zed[1].open(init_params)
 
+# Object detection class for ZED
 obj_param = sl.ObjectDetectionParameters()
-# for enum_value in sl.OBJECT_DETECTION_MODEL:
-#     print(enum_value)
-# breakpoint()
-
-# Use the dir() function to list all attributes and methods of obj_param
-# attributes_and_methods = dir(obj_param)
-
-# Print the list of attributes and methods
-# for item in attributes_and_methods:
-#     print(item)
-    
-# breakpoint()
-# obj_param.detection_model = sl.OBJECT_CLASS.PERSON
 
 
 obj_param.enable_tracking = True
@@ -105,7 +98,6 @@ depth2 = sl.Mat()
 
 
 
-
 # Enable Positional Tracking of the camera:
 
 positional_tracking_param = sl.PositionalTrackingParameters()
@@ -120,12 +112,7 @@ zed[1].enable_object_detection(obj_param)
 
 
 objects = [sl.Objects(), sl.Objects()]
-# attributes_and_methods = dir(objects[0].__class__)
 
-# Print the list of attributes and methods
-# for item in attributes_and_methods:
-#     print(item)
-    
 obj_runtime_param = sl.ObjectDetectionRuntimeParameters()
 obj_runtime_param.detection_confidence_threshold = 25
 runtime_parameters = sl.RuntimeParameters()
@@ -136,7 +123,7 @@ train_traj_cam_1_transf = []
 
 print("Trajectory Tracking Started")
 i = 0
-Num_frames = 264
+Num_frames = 264 # at 30 FPS i.e. 8.8 seconds
 while i < Num_frames:
 
     # Ego Agent:
@@ -193,7 +180,7 @@ while i < Num_frames:
                 train_traj_cam_2.append(ped_coord)
                 
     if i % 12 == 0 and i !=0:
-        filepath = "./frames_goodwin/intermittent_occlusion/CAM_2/frame_{}.jpg".format(i)
+        filepath = "./frames_goodwin/CAM_2/frame_{}.jpg".format(i)
         cv2.imwrite(filepath, img1_color)
         
             
@@ -250,7 +237,7 @@ while i < Num_frames:
                 [R_new,Rot2Eul, T_new, R, Rot2Eul_1, t] = compute_pose(img1_color, img2_color, K_1, K_2, scale =1.237)
                 # time.sleep(1) # Pause code
     if i % 12 == 0 and i !=0:            
-        filepath = "./frames_goodwin/intermittent_occlusion/CAM_1/frame_{}.jpg".format(i)
+        filepath = "./frames_goodwin/CAM_1/frame_{}.jpg".format(i)
         cv2.imwrite(filepath, img2_color)
 
     i += 1
@@ -279,16 +266,16 @@ print("trajectory one transformed", train_traj_cam_1_transf)
 print("trajectory two :", train_traj_cam_2)
 
 
-with open('./frames_goodwin/intermittent_occlusion/CAM_1/traj_occ4.pkl','wb') as f:
+with open('./frames_goodwin/CAM_1/traj_occ4.pkl','wb') as f:
     pkl.dump(train_traj_cam_1, f)
 
-with open('./frames_goodwin/intermittent_occlusion/CAM_1/traj_occ4_transf.pkl','wb') as f:
+with open('./frames_goodwin/CAM_1/traj_occ4_transf.pkl','wb') as f:
     pkl.dump(train_traj_cam_1_transf, f)
     
-with open('./frames_goodwin/intermittent_occlusion/CAM_2/traj_occ4.pkl','wb') as f:
+with open('./frames_goodwin/CAM_2/traj_occ4.pkl','wb') as f:
     pkl.dump(train_traj_cam_2, f)
     
-with open('./frames_goodwin/intermittent_occlusion/CAM_2/traj_occ4_params.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+with open('./frames_goodwin/CAM_2/traj_occ4_params.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
     pkl.dump([R, t], f)
 
 # close the camera
@@ -335,7 +322,7 @@ plt.setp(axs, xlim=custom_xlim, ylim=custom_ylim)
 # Adjust spacing between subplots
 plt.tight_layout()
 
-plt.savefig('./frames_goodwin/intermittent_occlusion/CAM_1/traj_occ3.png')
+# plt.savefig('./frames_goodwin/intermittent_occlusion/CAM_1/traj_occ3.png')
 
 # Show the plot
 plt.show()
