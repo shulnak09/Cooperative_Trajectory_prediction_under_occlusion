@@ -17,7 +17,7 @@ from matplotlib.patches import Ellipse
 from scipy.spatial.transform import Rotation
 
 
-device = torch.device('cpu' if torch.cuda.is_available() else 'cuda')
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 
@@ -253,8 +253,8 @@ def predict(model, input_tensor, target_len):
 # X[k+1] = A * X[K] + B * u[K] + w
 
 # Define the directories where your .pkl files are located
-directory1 = './frames_goodwin/CAM_1/'
-directory2 = './frames_goodwin/CAM_2/'
+directory1 = './frames_goodwin/TIV_results/CAM_1/'
+directory2 = './frames_goodwin/TIV_results/CAM_2/'
 
 # Create an empty list to store the loaded data
 data_list = []
@@ -262,7 +262,7 @@ data_list = []
 # Loop through all files in first directory:
 
 
-with open('./frames_goodwin_1/CAM_1/traj17','rb') as f:
+with open('./frames_goodwin/TIV_results/CAM_1/traj_occ4.pkl','rb') as f:
     data= pkl.load(f)
 
 np.set_printoptions(precision =3)
@@ -492,7 +492,8 @@ batch_gaussian_input, batch_gaussian_output = torch.split(batch_gaussian, [8,12]
 PATH = './MCD_models/lstm_seq2seq_eth_zara01_zara02.pt'
 num_fea = batch_gaussian_input.shape[3]
 model = lstm_seq2seq(input_size=num_fea, hidden_size =128).to(device) 
-model.load_state_dict(torch.load(PATH))
+# model.load_state_dict(torch.load(PATH))
+model.load_state_dict(torch.load(PATH, map_location=torch.device('cpu')))
 model.eval()
 
 
@@ -670,7 +671,7 @@ def error_covariance_ellipse(X_test, y_test, mus, sigmas, ground_cov, id_no =100
 
 id_list = [0] 
 print(plt.style.available)
-plt.style.use('seaborn-v0_8-white')
+# plt.style.use('seaborn-v0_8-white')
 # plt.figure(figsize=(1,6))
 fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8,4), sharex=False, sharey=True)
 

@@ -86,17 +86,6 @@ depth1 = sl.Mat()
 depth2 = sl.Mat()
 
 
-# zed[0].grab()
-# zed[0].retrieve_image(img1, sl.VIEW.LEFT)
-# img1_color = img1.get_data()
-# timestamp1 = zed[0].get_timestamp(sl.TIME_REFERENCE.CURRENT)
-
-# zed[1].grab()
-# zed[1].retrieve_image(img2, sl.VIEW.LEFT)
-# img2_color = img2.get_data()
-# timestamp2 = zed[1].get_timestamp(sl.TIME_REFERENCE.CURRENT)
-
-
 
 # Enable Positional Tracking of the camera:
 
@@ -174,13 +163,13 @@ while i < Num_frames:
                         fontScale = 1.0,
                         color = (125, 246, 55),
                         thickness = 1)
-            if i % 12 == 0 and i !=0:
+            if i % 12 == 0 and i >24:
                 
                 ped_coord = ([point3D_zed0[0],  point3D_zed0[2], velocity[0], velocity[2]])
                 train_traj_cam_2.append(ped_coord)
                 
     if i % 12 == 0 and i !=0:
-        filepath = "./frames_goodwin/CAM_2/frame_{}.jpg".format(i)
+        filepath = "./frames_goodwin/TIV_results/CAM_2/frame_{}.jpg".format(i)
         cv2.imwrite(filepath, img1_color)
         
             
@@ -236,8 +225,8 @@ while i < Num_frames:
                 # scale = np.linalg.norm(point3D_zed0[:3]-point3D_zed1[:3])
                 [R_new,Rot2Eul, T_new, R, Rot2Eul_1, t] = compute_pose(img1_color, img2_color, K_1, K_2, scale =1.237)
                 # time.sleep(1) # Pause code
-    if i % 12 == 0 and i !=0:            
-        filepath = "./frames_goodwin/CAM_1/frame_{}.jpg".format(i)
+    if i % 12 == 0 and i >24:            
+        filepath = "./frames_goodwin/TIV_results/CAM_1/frame_{}.jpg".format(i)
         cv2.imwrite(filepath, img2_color)
 
     i += 1
@@ -265,17 +254,18 @@ print("trajectory one :", train_traj_cam_1 )
 print("trajectory one transformed", train_traj_cam_1_transf)
 print("trajectory two :", train_traj_cam_2)
 
+traj_name = 'turning_left'
 
-with open('./frames_goodwin/CAM_1/traj_occ4.pkl','wb') as f:
+with open(f'./frames_goodwin/TIV_results/CAM_1/{traj_name}.pkl','wb') as f:
     pkl.dump(train_traj_cam_1, f)
 
-with open('./frames_goodwin/CAM_1/traj_occ4_transf.pkl','wb') as f:
+with open(f'./frames_goodwin/TIV_results/CAM_1/{traj_name}_transf.pkl','wb') as f:
     pkl.dump(train_traj_cam_1_transf, f)
     
-with open('./frames_goodwin/CAM_2/traj_occ4.pkl','wb') as f:
+with open(f'./frames_goodwin/TIV_results/CAM_2/{traj_name}.pkl','wb') as f:
     pkl.dump(train_traj_cam_2, f)
     
-with open('./frames_goodwin/CAM_2/traj_occ4_params.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+with open(f'./frames_goodwin/TIV_results/CAM_2/{traj_name}_params.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
     pkl.dump([R, t], f)
 
 # close the camera
@@ -313,7 +303,7 @@ axs[1, 0].legend()
 
 # plt.legend('Camera_1','Camera_1_transf','Camera_2')
 # Defining custom 'xlim' and 'ylim' values.
-custom_xlim = (-2, 2)
+custom_xlim = (-3, 3)
 custom_ylim = (-1, 7)
 
 # Setting the values for all axes.
