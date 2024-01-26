@@ -1,0 +1,43 @@
+
+# data = 1.5 * np.array(data)
+# data = np.insert(arr = data, obj=[1],values = 0, axis =1)
+# # print(data)
+
+# # Do the transformation:
+# R =  np.array([0.92768715, -0.04470923,  0.37067186,
+# 0.02332297,  0.99780478,  0.06198113,
+#  -0.37262929, -0.04885393,  0.92669343]).reshape(3,3)
+
+
+# ### first transform the matrix to euler angles
+# r =  Rotation.from_matrix(R)
+# angles = r.as_euler("zyx",degrees=True)
+
+# print("rpy", angles)
+
+# for i in range(10):
+
+#     sigma = np.random.normal(0, 0.5*np.abs(angles))
+#     angles += 0 * sigma
+
+# new_r = Rotation.from_euler("zyx",angles,degrees=True)
+# new_rotation_matrix = new_r.as_matrix()
+
+
+
+# t =  np.array([1.16323258, 0.0667586 ,0.04029998]).reshape(3,1)
+# R,t = np.array(new_rotation_matrix),np.array(t)
+# print("New_Rotation_Matrix", R)
+
+
+# # print("Mat Mul:",np.matmul(R,data[1,:3].reshape(-1,1)))
+# # print("Mat diff:",  (data[1,:3]))
+
+# # If RON_12: convert 1 to coordinate frame of 2 : Inverse  transformation
+# #  If RON_21: convert 2 to coordinate frame of 1: Rigid Transform
+
+# coord_transf = np.zeros((data.shape[0],3))
+# for i in range(data.shape[0]):
+#     coord_transf[i,:] =  np.squeeze(np.matmul(R.T,(data[i,:3].reshape(-1,1)- t)))
+
+# # print(coord_transf)

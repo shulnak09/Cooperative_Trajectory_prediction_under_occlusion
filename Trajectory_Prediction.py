@@ -262,7 +262,7 @@ data_list = []
 # Loop through all files in first directory:
 
 
-with open('./frames_goodwin/TIV_results/CAM_1/traj_occ4.pkl','rb') as f:
+with open('./frames_goodwin/TIV_results/CAM_2/straight.pkl','rb') as f:
     data= pkl.load(f)
 
 np.set_printoptions(precision =3)
@@ -518,6 +518,7 @@ for i in random.sample(idx,Num_ens):
     sigmas.append(y_train_pred_logvar)
 
 mu_preds, sigma_preds = torch.stack(preds), torch.stack(sigmas)  # Imp to convert a torch list to tensor
+
 
 
 def error_covariance_ellipse(X_test, y_test, mus, sigmas, ground_cov, id_no =100):
