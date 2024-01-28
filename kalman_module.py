@@ -1,7 +1,15 @@
 from scipy.linalg import inv
 import numpy as np
 
+'''
+The Kalman Module can be considered as a data augmentation step. It samples N similar trajectories
+to the original pedestrian trajectory from the posterior distribution of KF. This augments the number of
+trajectories for training. In this particular set-up, the data augmentation using KF is
+not particularly important. For in depth understanding, one can refer to our paper:
+https://arxiv.org/abs/2305.16620
+'''
 
+# State Transition Matrix (constant-velocity model)
 def get_F(dt):  
     F = np.array([[1., 0, dt, 0],
                   [0,  1., 0, dt],
@@ -9,6 +17,7 @@ def get_F(dt):
                   [0,  0, 0, 1]])
     return F
 
+# Model uncertainty
 def get_Q(dt, var_wx, var_wy):
     Q = np.array([[0.25*dt**4*var_wx, 0, 0.5*dt**3*var_wx,0],
                   [0, 0.25*dt**4*var_wy, 0, 0.5*dt**3*var_wy],
@@ -17,10 +26,10 @@ def get_Q(dt, var_wx, var_wy):
     return Q
 
 # Define the process covariance matrix P:
-sigma_x = 1
-sigma_y = 1
+sigma_x = 0.5
+sigma_y = 1.5
 sigma_u = 0.25
-sigma_v = 0.25
+sigma_v = 0.5
 P = np.diag([sigma_x**2,sigma_y**2, sigma_u**2, sigma_v**2]) 
 
 
@@ -30,8 +39,8 @@ def Kalman_filter(
                     vx, vx_dot,
                     vy, vy_dot,
                     dt = 0.4,
-                    var_wx = 0.5,
-                    var_wy = 0.25,
+                    var_wx = 1,
+                    var_wy = 1,
                     P = P
                 ):
     
@@ -87,17 +96,17 @@ def get_trajectory(
                     # add other inputs for Kalman filter
                     dt = 0.4,
                     var_wx = 0.5,
-                    var_wy = 0.25
+                    var_wy = 0.5
                   ):
     lookback = X_seq.shape[0]
-    vx, vx_dot = 0.05*np.mean([X_seq[:,0]]), 0.05*np.mean([X_seq[:,2]])
-    vy, vy_dot = 0.05*np.mean([X_seq[:,1]]), 0.05*np.mean([X_seq[:,3]]) 
+    vx, vx_dot = sigma*np.mean([X_seq[:,0]]), sigma*np.mean([X_seq[:,2]])
+    vy, vy_dot = sigma*np.mean([X_seq[:,1]]), sigma*np.mean([X_seq[:,3]]) 
     
     # Define the state variance, P:
-    sigma_x = 0.5
-    sigma_y = 0.5
-    sigma_u = 0.25
-    sigma_v = 0.25
+    sigma_x = 2
+    sigma_y = 2
+    sigma_u = 1
+    sigma_v = 1
     P = np.diag([sigma_x**2, sigma_y**2, sigma_u**2, sigma_v**2]) 
     
     trajectories, mus, covs = [], [], []
@@ -119,8 +128,8 @@ def get_trajectory(
                                 vy_dot,
                                 #add other inputs
                                 dt = 0.4,
-                                var_wx = 0.5,
-                                var_wy = 0.25,
+                                var_wx = 1,
+                                var_wy = 1,
                                 P = P
                                 )
         P = cov
@@ -141,7 +150,7 @@ def get_N_trajectories(
             ):
     num_trajectories, batch_mu, batch_cov = [], [], []
     for i in range(num_traj):
-        traj, mus, covs = get_trajectory(X_seq)
+        traj, mus, covs = get_trajectory(X_seq, mu = 0., sigma = 0.05)
         num_trajectories.append(traj)
         batch_mu. append(mus)
         batch_cov.append(covs)

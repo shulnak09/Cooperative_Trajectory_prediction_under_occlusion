@@ -11,7 +11,11 @@ import os
 import glob
 from scipy.spatial.transform  import Rotation as Rot
 
-
+'''
+The function compute_pose() matches the features and computes the initial pose
+between images as seen by two agents. It takes both the perspective images as well 
+as the calibration matrices as inputs and returns the pose [R | t].
+'''
 
 
 def degeneracyCheckPass(first_points, second_points, rot, trans):
@@ -29,57 +33,7 @@ def degeneracyCheckPass(first_points, second_points, rot, trans):
 
 
 
-
-# cv2.imshow('img1',img1)
-# cv2.imshow('img2',img2)
-# cv2.waitKey()
-# cv2.destroyAllWindows()
-
-
-#img1 = cv2.resize(img1, (0, 0), fx=0.5, fy=0.5)
-#img2 = cv2.resize(img2, (0, 0), fx=0.5, fy=0.5)
-
-
-# camera parameters for camera 1:
-# d_1 = np.array([-0.15817939,  0.25302025, -0.00808064, -0.00378845, -0.22562249,
-#    0.0,0.0,0.0]).reshape(1, 8) # distortion coefficients
-
-# mtx_1 = np.array([384.84542927,   0.,         331.15572832,
-#  0.,         382.36109769,  217.8661891,
-#  0.,           0.,           1.        ]).reshape(3,3)
-
-# # camera intrinsic calibration matrix:
-# K_1 = np.array([260.98840332,   0.,         294.14459532,
-#   0.,         342.36157227, 218.27474142,
-#   0.,           0.,           1.        ]).reshape(3, 3) # Camera matrix
-# K_inv_1 = np.linalg.inv(K_1)
-
-
-
-# # camera parameters for camera 2:
-# d_2 = np.array([-0.01421948, -0.0023693,   0.00136353, -0.00407703,  0.00316767,
-#    0.0,0.0,0.0]).reshape(1, 8) # distortion coefficients
-
-# mtx_2 = np.array([282.89772951,   0.,         331.97077799,
-#    0. ,        281.89282259,  199.27712019,
-#    0. ,          0.,           1.        ]).reshape(3,3)
-
-# # camera intrinsic calibration matrix:
-# K_2 = np.array([277.50967407,   0. ,        326.33731671,
-#    0.,        274.50146484,  199.66194455,
-#    0.,           0.,           1.        ]).reshape(3, 3) # Camera matrix
-# K_inv_2 = np.linalg.inv(K_2)
-
-
-
-# img1 = cv2.undistort(img1, mtx_1, d_1,None, K_1)
-# img2 = cv2.undistort(img2, mtx_2, d_2,None, K_2)
-
-
-#cv2.imshow("Image 1",img1)
-#cv2.imshow("Image 2",img2)
-
-def compute_pose(img1, img2, K_1, K_2, scale):
+def compute_pose(img1, img2, K_1, K_2, scale=0.2):
     
     img1 = cv2.cvtColor(img1,cv2.COLOR_BGR2GRAY)
     img2 = cv2.cvtColor(img2,cv2.COLOR_BGR2GRAY)
@@ -150,7 +104,7 @@ def compute_pose(img1, img2, K_1, K_2, scale):
     #         good.append([m])
 
 
-    MIN_MATCH_COUNT = 10
+    MIN_MATCH_COUNT = 20
 
 
     if len(matches)>MIN_MATCH_COUNT:
@@ -174,17 +128,6 @@ def compute_pose(img1, img2, K_1, K_2, scale):
     # converting source and destination points into numpy array and saving them
     src_pts = np.array(src_pts)
     dst_pts = np.array(dst_pts)
-
-
-
-    # np.savetxt("src.txt", src_pts, fmt= "%s")
-
-    # a_file = open("test.txt", "w")
-    # for row in an_array:
-    #     np.savetxt(a_file, row)
-
-    # a_file.close()
-
 
 
     # Draw first 10 matches.
@@ -215,69 +158,7 @@ def compute_pose(img1, img2, K_1, K_2, scale):
     # total time taken for calculating Fundamental matrix:
     print(f"Runtime for program:  {end_time - start}")
 
-    # Estimate the Fundamental Matrix Residual:
-
-    # pts1 = []
-    # pts2 = []
-    # # ratio test as per Lowe's paper
-    # for m,n in matches:
-    #     if m.distance < 0.7*n.distance:
-    #         pts2.append(kp2[m.trainIdx].pt)
-    #         pts1.append(kp1[m.queryIdx].pt)
-
-
-    # pts1 = np.int32(pts1)
-    # pts2 = np.int32(pts2)
-
-    # F, mask = cv2.findFundamentalMat(pts1,pts2,cv2.FM_RANSAC,2,0.99)
-    # # We select only inlier points
-    # pts1 = pts1[mask.ravel()==1]
-    # pts2 = pts2[mask.ravel()==1]
-
-
-    """
-
-
-    """
-    # def estimate_relative_pose_from_correspondence(pts1, pts2, K):
-    #     f_avg = K[0, 0]
-
-    #     pts_l_norm = cv2.undistortPoints(np.expand_dims(pts1, axis=1), cameraMatrix=K, distCoeffs=d)
-    #     pts_r_norm = cv2.undistortPoints(np.expand_dims(pts2, axis=1), cameraMatrix=K, distCoeffs=d)
-
-    #     E, mask = cv2.findEssentialMat(pts_l_norm, pts_r_norm, focal=1.0, pp=(0., 0.),
-    #                                    method=cv2.RANSAC, prob=0.999, threshold=3.0 / f_avg)
-    #     points, R_est, t_est, mask_pose = cv2.recoverPose(E, pts_l_norm, pts_r_norm)
-    #     return mask[:, 0].astype(np.bool), R_est, t_est
-
-    # mask, R_est, t_est = estimate_relative_pose_from_correspondence(pts1, pts2, K)
-
-    """
-
-    # Calculation of ESsential Matrix
-    """
-    # The Calibration matrix for Camera 110 corresponding to the current project at 
-    # Gain  = 28 and Exposure  = 1200 is given by, 
-    # K  = [ 1.899e3 0 5.681e2; 0 1.903e3 4.427e2; 0 0 1]
-
-    """
-
-    Distortion and Camera matrix at Gain 32 and Exposure  - 2000
-    [[1.81362513e+03 0.00000000e+00 5.12827990e+02]
-    [0.00000000e+00 1.80934411e+03 4.19262288e+02]
-    [0.00000000e+00 0.00000000e+00 1.00000000e+00]]
-
-    Distortion coefficient:
-    [[-3.77532861e-01 -8.04945478e-01 -2.72523000e-03 -3.64935036e-03
-    5.86154401e+00]]
-
-    # Distortion coefficient @ Gain - 32 and exposure - 1000 : [-4.22563931e-01  7.13730012e-01 -3.07550961e-03  1.04563406e-03
-    #   -4.09858057e+00]
-
-    """
-    # Calibration matrix at Gain - 32 and exposure - 1000 and 6 x 9 checkerboard
-    # K  = np.array([[ 1.813e3,0,5.1282e2], [0,1.8093e3,4.1926e2],[ 0, 0, 1]])#  Camera calibration matrix
-
+    
     # Calculate the Essential Matrix
     E = K_1.T.dot(F).dot(K_2)
     # print(E)

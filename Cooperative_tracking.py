@@ -23,7 +23,7 @@ def interpolate_nan(initial_array):
             cs = CubicSpline(t_interp, y_interp)
             initial_array[nan_indices, col] = cs(t[nan_indices])
 
-def cooperative_estimation():
+def cooperative_estimation(traj_folder = 'straight'):
     # open the two zed cameras:
     zed = [sl.Camera(), sl.Camera()]
 
@@ -164,7 +164,7 @@ def cooperative_estimation():
                             fontScale = 1.0,
                             color = (125, 246, 55),
                             thickness = 1)
-                if i % 12 == 0 :
+                if i % 12 == 0 and i!= 0 :
                     
                     ped_coord = ([point3D_zed0[0],  point3D_zed0[2], velocity[0], velocity[2]])
                     train_traj_cam_2.append(ped_coord)
@@ -205,7 +205,7 @@ def cooperative_estimation():
                             fontScale = 1.0,
                             color = (125, 246, 55),
                             thickness = 1)
-                if i % 12 == 0:
+                if i % 12 == 0 and i!=0:
                     
                     ped_coord = ([point3D_zed1[0],  point3D_zed1[2], velocity[0], velocity[2]])
                     ped_coord_aug = np.array(ped_coord)
@@ -224,7 +224,7 @@ def cooperative_estimation():
                 if i == 6:
                     # Pose Recovery: Use R,t for now
                     scale = np.linalg.norm(point3D_zed0[:3]-point3D_zed1[:3])
-                    [R_new,Rot2Eul, T_new, R, Rot2Eul_1, t] = compute_pose(img1_color, img2_color, K_1, K_2, scale)
+                    [R_new,Rot2Eul, T_new, R, Rot2Eul_1, t] = compute_pose(img1_color, img2_color, K_1, K_2, scale = scale)
                     # time.sleep(1) # Pause code
         if i % 12 == 0 and i != 0:            
             filepath = "./frames_goodwin/TIV_results/CAM_1/frame_{}.jpg".format(i)
@@ -255,18 +255,18 @@ def cooperative_estimation():
     print("trajectory one transformed", train_traj_cam_1_transf)
     print("trajectory two :", train_traj_cam_2)
 
-    traj_name = 'straight_1'
+    # traj_name = traj_name
 
-    with open(f'./frames_goodwin/TIV_results/CAM_1/{traj_name}.pkl','wb') as f:
+    with open(f'./frames_goodwin/TIV_results/Results/{traj_folder}/Static_cam.pkl','wb') as f:
         pkl.dump(train_traj_cam_1, f)
 
-    with open(f'./frames_goodwin/TIV_results/CAM_1/{traj_name}_transf.pkl','wb') as f:
+    with open(f'./frames_goodwin/TIV_results/Results/{traj_folder}/Static_cam_transf.pkl','wb') as f:
         pkl.dump(train_traj_cam_1_transf, f)
         
-    with open(f'./frames_goodwin/TIV_results/CAM_2/{traj_name}.pkl','wb') as f:
+    with open(f'./frames_goodwin/TIV_results/Results/{traj_folder}/Ego_agent.pkl','wb') as f:
         pkl.dump(train_traj_cam_2, f)
         
-    with open(f'./frames_goodwin/TIV_results/CAM_2/{traj_name}_params.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+    with open(f'./frames_goodwin/TIV_results/Results/{traj_folder}/Pose_params.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
         pkl.dump([R, t], f)
 
     # close the camera
@@ -313,7 +313,7 @@ def cooperative_estimation():
     # Adjust spacing between subplots
     plt.tight_layout()
 
-    plt.savefig(f'./frames_goodwin/TIV_results/CAM_2/{traj_name}.png')
+    plt.savefig(f'./frames_goodwin/TIV_results/Results/{traj_folder}/Trajectories.png')
 
     # Show the plot
     plt.show()
