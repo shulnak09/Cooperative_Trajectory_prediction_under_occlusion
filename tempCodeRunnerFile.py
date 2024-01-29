@@ -1,2 +1,2 @@
-print("mus :", mus)
-# print("sigmas: ", sigmas)
+    # plt.savefig(f'./frames_goodwin/TIV_results/Results/{traj_folder}/prediction.png', dpi=300, bbox_inches='tight', pad_inches=0.1)
+    # plt.savefig(f'./frames_goodwin/TIV_results/Results/{traj_folder}/prediction.pdf', dpi=300, bbox_inches='tight', pad_inches=0.1)

@@ -103,7 +103,7 @@ def error_covariance_ellipse(X_test, y_test, mus, sigmas, ground_cov, ax,  id_no
     ax.set_aspect('equal', adjustable='box')
     plt.rcParams.update({'font.size': 14})
     
-    ax.set_xlim([-3,3])
+    ax.set_xlim([-6,6])
     ax.set_xticks([-2,0,2])
     ax.set_ylim([-2,14])
     csfont = {'fontname':'P052'}
@@ -125,26 +125,26 @@ def error_covariance_ellipse(X_test, y_test, mus, sigmas, ground_cov, ax,  id_no
 
 
 
-# Run the cooperative Tracking ONLINE  using cameras:
-traj_folder = 'orientation_8'
-[traj_1, traj_1_transf, traj_2] = cooperative_estimation(traj_folder = traj_folder)
-offline_data = [traj_1, traj_1_transf, traj_2]
+# # Run the cooperative Tracking ONLINE  using cameras:
+# traj_folder = 'orientation_8'
+# [traj_1, traj_1_transf, traj_2] = cooperative_estimation(traj_folder = traj_folder)
+# offline_data = [traj_1, traj_1_transf, traj_2]
 
 
-# # Below we compute the performance metrics OFFLINE:
-# # Open the saved .pkl files for obtaining performance metrics:
-# traj_folder = './frames_goodwin/TIV_results/Results/straight_1'
+# Below we compute the performance metrics OFFLINE:
+# Open the saved .pkl files for obtaining performance metrics:
+traj_folder = './frames_goodwin/TIV_results/Results/Orientation_8'
 
-# # Define the file names:
-# file_names = ['Static_cam.pkl', 'Static_cam_transf.pkl', 'Ego_agent.pkl']
+# Define the file names:
+file_names = ['Static_cam.pkl', 'Static_cam_transf.pkl', 'Ego_agent.pkl']
 
-# offline_data = []
-# for file_name in file_names:
-#     file_path = os.path.join(traj_folder, file_name )
+offline_data = []
+for file_name in file_names:
+    file_path = os.path.join(traj_folder, file_name )
     
     
-#     with open(file_path, 'rb') as file:
-#         offline_data.append(pkl.load(file))
+    with open(file_path, 'rb') as file:
+        offline_data.append(pkl.load(file))
 
 # Start time:
 start_time = time.time()
@@ -154,6 +154,8 @@ fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(7.5,3), sharex=False, sharey=
 
 sigma_preds = []
 mu_preds = []
+
+
 for plot_id in range (len(offline_data)):
     train_traj = np.expand_dims(offline_data[plot_id], axis =0)
     train_traj = train_traj - train_traj[:,0,:]
@@ -183,8 +185,7 @@ for plot_id in range (len(offline_data)):
     batch_gaussian = np.concatenate([batch_traj[:,:,:,:num_fea], test_cov[:,:,:,:num_fea]], axis = 3)
     batch_gaussian = torch.tensor(batch_gaussian).float().to(device)
     batch_gaussian_input, batch_gaussian_output = torch.split(batch_gaussian, [8,12], dim =2) 
-
-
+    
     # Load the MCD/DE saved NN model weights and biases as .pt file for inference
     PATH = './MCD_models/lstm_seq2seq_eth_zara01_zara02.pt'
     num_fea = batch_gaussian_input.shape[3] # Number of states
@@ -193,23 +194,21 @@ for plot_id in range (len(offline_data)):
     model.load_state_dict(torch.load(PATH, map_location=torch.device('cpu')))
     model.eval() # Model set to evaluation set
 
-
-    Num_ens = 1
     forward_pred = 12
     look_back = 8
     min_logvar, max_logvar = -4, 4
 
 
-
-    # for i in random.sample(idx, Num_ens):
-    y_train_pred = model.predict(batch_gaussian_input[:,0,:,:], forward_pred, device)
-    # print(y_train_pred.shape)
-    y_train_pred_mu,   y_train_state_logvar, y_train_pred_logvar = y_train_pred[:,:,:int(num_fea/2)], (y_train_pred[:,:,int(num_fea/2):num_fea]), (y_train_pred[:,:,num_fea:])#target_len, b, 8
-    y_train_state_var = torch.exp(y_train_state_logvar)
-    y_train_pred_logvar = torch.clamp(y_train_pred_logvar, min=min_logvar, max=max_logvar)
-    y_train_pred_mean = torch.cat((y_train_pred_mu, y_train_state_var),2)
-    mse_train = ((y_train_pred_mean - batch_gaussian_output[:,0,:,:num_fea])**2).mean()
-    #  print(f"Train MSE: {mse_train}")
+    with torch.no_grad():
+        # for i in random.sample(idx, Num_ens):
+        y_train_pred = model.predict(batch_gaussian_input[:,0,:,:], forward_pred, device)
+        # print(y_train_pred.shape)
+        y_train_pred_mu,   y_train_state_logvar, y_train_pred_logvar = y_train_pred[:,:,:int(num_fea/2)], (y_train_pred[:,:,int(num_fea/2):num_fea]), (y_train_pred[:,:,num_fea:])#target_len, b, 8
+        y_train_state_var = torch.exp(y_train_state_logvar)
+        y_train_pred_logvar = torch.clamp(y_train_pred_logvar, min=min_logvar, max=max_logvar)
+        y_train_pred_mean = torch.cat((y_train_pred_mu, y_train_state_var),2)
+        mse_train = ((y_train_pred_mean - batch_gaussian_output[:,0,:,:num_fea])**2).mean()
+        #  print(f"Train MSE: {mse_train}")
 
 
     mu_preds.append(y_train_pred_mean)
@@ -240,16 +239,19 @@ for plot_id in range (len(offline_data)):
     by_label = dict(zip(labels, handles))
     # plt.legend(by_label.values(), by_label.keys(), fontsize = 12, loc = 'lower left', bbox_to_anchor=( -0.05,-0.05) )
 
-    plt.savefig(f'./frames_goodwin/TIV_results/Results/{traj_folder}/prediction.png', dpi=300, bbox_inches='tight', pad_inches=0.1)
-    plt.savefig(f'./frames_goodwin/TIV_results/Results/{traj_folder}/prediction.pdf', dpi=300, bbox_inches='tight', pad_inches=0.1)
+    # plt.savefig(f'./frames_goodwin/TIV_results/Results/{traj_folder}/prediction.png', dpi=300, bbox_inches='tight', pad_inches=0.1)
+    # plt.savefig(f'./frames_goodwin/TIV_results/Results/{traj_folder}/prediction.pdf', dpi=300, bbox_inches='tight', pad_inches=0.1)
 
 plt.show()
 
 mus, sigmas = torch.stack(mu_preds), torch.stack(sigma_preds)
+print(mus.shape)
+
+
 
 # Compute the perfromance metrics:
-ADE = average_displacement_error(mus.detach().cpu().numpy(), np.array(offline_data))
-FDE = final_displacement_error(mus.detach().cpu().numpy(), np.array(offline_data))
+ADE = average_displacement_error(mus.detach().cpu().numpy())
+FDE = final_displacement_error(mus.detach().cpu().numpy())
 print("ADE: {}".format(ADE))
 print("FDE: {}".format(FDE))
 
@@ -257,11 +259,36 @@ print("FDE: {}".format(FDE))
 error_ = relative_error( offline_data[1],  offline_data[2])
 print("Relative Error: {}".format(error_))
 
-# Compute the KL-divergence:
-# for traj_no in range(3):
-    
-    
 
+
+# Compute the KL-divergence:
+KL_div = []
+H1, H2 = [], []
+for pred in range(12):
+    mu_1, sigma_1 = mus[1,0,pred,:2].detach().cpu().numpy(), np.diag(np.exp(sigmas[1,0,pred,:2].detach().cpu().numpy())) 
+    mu_2, sigma_2 = mus[2,0,pred,:2].detach().cpu().numpy(), np.diag(np.exp(sigmas[2,0,pred,:2].detach().cpu().numpy()))
+    Kl_div = KL_divergence(mu_1, mu_2, sigma_1, sigma_2)
+    
+    # Compute the entropy for two distributions:
+    '''
+    Do not change the order for np.exp and np.diag or else the off-diagonal terms will become 1 as np.exp(0) ==1
+    '''
+    h1, h2 = entropy(sigma_1), entropy(sigma_2) 
+
+    
+    H1.append(h1)
+    H2.append(h2)  
+    KL_div.append(Kl_div)
+
+H1 = np.array(H1)
+H2 = np.array(H2)  
+ 
+KL_div = np.array(np.squeeze(KL_div))
+
+
+KL_div_H = KL_div/H2
+print("KL_div vs H:",KL_div)
+print("KL_div avg:", np.mean(KL_div))
 
 # print("mus :", mus[0,:,:,:2])
 # print("Traj :", np.array(offline_data)[0,:,:2])
