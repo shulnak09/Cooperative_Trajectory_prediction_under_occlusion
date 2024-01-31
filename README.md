@@ -5,5 +5,4 @@ pose is used to estimate occluded pedestrian's state from one sensor to another 
 neural network (BNN) which uses deep ensembles or Monte Carlo dropout to probabilistically predict future states.
 
 
-# Files:
-- 
+
