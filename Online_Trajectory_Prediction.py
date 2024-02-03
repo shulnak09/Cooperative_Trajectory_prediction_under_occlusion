@@ -128,7 +128,7 @@ def error_covariance_ellipse(X_test, y_test, mus, sigmas, ground_cov, ax,  id_no
 # # Run the cooperative Tracking ONLINE  using cameras:
 # traj_folder = 'orientation_8'
 # [traj_1, traj_1_transf, traj_2] = cooperative_estimation(traj_folder = traj_folder)
-# online_data = [traj_1, traj_1_transf, traj_2]
+# data = [traj_1, traj_1_transf, traj_2]
 
 
 # Below we compute the performance metrics OFFLINE:
@@ -138,13 +138,13 @@ traj_folder = './frames_goodwin/TIV_results/Results/Orientation_8'
 # Define the file names:
 file_names = ['Static_cam.pkl', 'Static_cam_transf.pkl', 'Ego_agent.pkl']
 
-online_data = []
+data = []
 for file_name in file_names:
     file_path = os.path.join(traj_folder, file_name )
     
     
     with open(file_path, 'rb') as file:
-        online_data.append(pkl.load(file))
+        data.append(pkl.load(file))
 
 # Start time:
 start_time = time.time()
@@ -156,8 +156,8 @@ sigma_preds = []
 mu_preds = []
 
 
-for plot_id in range (len(online_data)):
-    train_traj = np.expand_dims(online_data[plot_id], axis =0)
+for plot_id in range (len(data)):
+    train_traj = np.expand_dims(data[plot_id], axis =0)
     train_traj = train_traj - train_traj[:,0,:]
     # print("train_traj : {}".format(train_traj))
     # X_train, y_train = np.split(train_traj, [8,12], axis = 1)
@@ -256,7 +256,7 @@ print("ADE: {}".format(ADE))
 print("FDE: {}".format(FDE))
 
 # Relative Error between actual and estimated trajectory
-error_ = relative_error( online_data[1],  online_data[2])
+error_ = relative_error( data[1],  data[2])
 print("Relative Error: {}".format(error_))
 
 
@@ -291,5 +291,5 @@ print("KL_div vs H:",KL_div)
 print("KL_div avg:", np.mean(KL_div))
 
 # print("mus :", mus[0,:,:,:2])
-# print("Traj :", np.array(online_data)[0,:,:2])
+# print("Traj :", np.array(data)[0,:,:2])
 
